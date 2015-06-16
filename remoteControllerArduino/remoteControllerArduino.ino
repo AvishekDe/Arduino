@@ -22,6 +22,14 @@ Servo firstESC, secondESC ,thirdESC , fourthESC; //Include as many servo objects
 volatile int prev_time;
 volatile int new_time;
 
+//Integers to store motor velocities and properties
+int va=0;
+int vb=0;
+int vc=0;
+int vd=0;
+int rudder=0;
+int elevator = 0;
+int aileron = 0;
 //Define Sensitivities
 
 int rudderSen = 300;
@@ -49,8 +57,9 @@ void setup() {
 void loop(){
   //Run the motor
   runMotor();  
-  delay(400);
+  
   #ifdef DEBUG
+  //delay(400);
   Serial.println("--------------------");
   #endif
 }
@@ -63,12 +72,14 @@ void arm() {
   delay(3000);
   
   //Throttle full
-  servoWrite(2000,2000,2000,2000);
+  va=vb=vc=vd=2000;
+  servoWrite();
   
   delay(1500); //This delay should be less than 2 seconds
   
   //Throttle min
-  servoWrite(700,700,700,700);
+  va=vb=vc=vd=700;
+  servoWrite();
   
   delay(3000); //Delay of 3 seconds before motor runs
 }
@@ -94,9 +105,9 @@ void throttleController(){
     Serial.println(value);
     #endif
     
-    
+    va=vb=vc=vd=value;
    //Automatic motor control code goes here
-    servoWrite(value,value,value,value);
+    servoWrite();
 }
 
 void rudderController(){
@@ -134,11 +145,11 @@ void aileronController(){
 
 
 //This function writes different/same values to the servo connected to the motors
-void servoWrite(int value1 , int value2, int value3, int value4){
-  firstESC.writeMicroseconds(value1);
-  secondESC.writeMicroseconds(value2);
-  thirdESC.writeMicroseconds(value3);
-  fourthESC.writeMicroseconds(value4);
+void servoWrite(){
+  firstESC.writeMicroseconds(va);
+  secondESC.writeMicroseconds(vb);
+  thirdESC.writeMicroseconds(vc);
+  fourthESC.writeMicroseconds(vd);
 }
 
 
