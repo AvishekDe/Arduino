@@ -27,9 +27,19 @@ int va=0;
 int vb=0;
 int vc=0;
 int vd=0;
-int rudder=0;
-int elevator = 0;
-int aileron = 0;
+int vr=0;
+int ve=0;
+int vl=0;
+
+//Define mean values
+int rudderMean=0;
+int elevatorMean = 0;
+int aileronMean = 0;
+
+//Define error in reading
+int eRudder = 40;
+int eElevator = 60;
+int eAileron = 60;
 //Define Sensitivities
 
 int rudderSen = 300;
@@ -86,13 +96,16 @@ void arm() {
 
 void runMotor(){
   // Control for Throttle
+  if(!checkRudder() && !checkElevator() && !checkAileron()){
   throttleController();
+  }
   //Control for Rudder
   rudderController();
   //Control for Elevator
   elevatorController();
   //Control for Aileron
   aileronController();
+  servoWrite();
 }
 
 
@@ -107,7 +120,6 @@ void throttleController(){
     
     va=vb=vc=vd=value;
    //Automatic motor control code goes here
-    servoWrite();
 }
 
 void rudderController(){
@@ -118,6 +130,7 @@ void rudderController(){
   Serial.println(value);
   #endif
   
+  vr=value;
 }
 
 void elevatorController(){
@@ -127,7 +140,7 @@ void elevatorController(){
   Serial.print("Elevator=");
   Serial.println(value);
   #endif
-  
+  ve=value;
   
 }
 
@@ -138,7 +151,7 @@ void aileronController(){
   Serial.print("Aileron=");
   Serial.println(value);
   #endif
-  
+  vl=value;
 }
 
 
@@ -152,6 +165,24 @@ void servoWrite(){
   fourthESC.writeMicroseconds(vd);
 }
 
+//Check if sticks are active
+boolean checkRudder(){
+  if(vr>(rudderMean+eRudder)||vr<(rudderMean-eRudder))
+  return true;
+  else return false;
+}
+
+boolean checkElevator(){
+  if(ve>(elevatorMean+eElevator)||ve<(elevatorMean-eElevator))
+  return true;
+  else return false;
+}
+
+boolean checkAileron(){
+  if(vl>(aileronMean+eAileron)||vl<(aileronMean-eAileron))
+  return true;
+  else return false;
+}
 
 //If you want to use Interrupt to calculate PWM
 /*void startSignal(){
