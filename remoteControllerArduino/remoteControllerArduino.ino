@@ -4,6 +4,27 @@
 Coded by Avishek De
 Open source - do what you want with this code!
 */
+
+
+
+
+/*
+MOTOR MAP
+
+3(A)...................5(B)
+.
+.
+.
+.
+.
+.
+.
+11(D).................9(C)
+*/
+
+
+
+
 #include <Servo.h>
 
 
@@ -42,9 +63,9 @@ int eElevator = 60;
 int eAileron = 60;
 //Define Sensitivities
 
-int rudderSen = 300;
-int elevatorSen = 300;
-int aileronSen = 300;
+int rudderSen = 400;
+int elevatorSen = 400;
+int aileronSen = 400;
 
 void setup() {
   
@@ -69,8 +90,8 @@ void loop(){
   runMotor();  
   
   #ifdef DEBUG
-  //delay(400);
-  Serial.println("--------------------");
+  displayVelocity();
+  Serial.println("----------------");
   #endif
 }
 
@@ -96,15 +117,15 @@ void arm() {
 
 void runMotor(){
   // Control for Throttle
-  if(!checkRudder() && !checkElevator() && !checkAileron()){
+  //if(!checkRudder() && !checkElevator() && !checkAileron()){
   throttleController();
-  }
+  //}
   //Control for Rudder
-  rudderController();
+  if(checkRudder()) rudderController();
   //Control for Elevator
-  elevatorController();
+  if(checkElevator()) elevatorController();
   //Control for Aileron
-  aileronController();
+  if(checkAileron()) aileronController();
   servoWrite();
 }
 
@@ -119,18 +140,19 @@ void throttleController(){
     #endif
     
     va=vb=vc=vd=value;
-   //Automatic motor control code goes here
-}
+  }
 
 void rudderController(){
-  int duration = pulseIn(rudder, HIGH);
-  int value = map(duration, 1360 , 2520 , -rudderSen , rudderSen);
   #ifdef DEBUG
   Serial.print("Rudder=");
-  Serial.println(value);
+  Serial.println(vr);
   #endif
+
+  vb=vb+vr;
+  vd=vd+vr;
+  va=va-vr;
+  vc=va-vr;
   
-  vr=value;
 }
 
 void elevatorController(){
@@ -167,6 +189,9 @@ void servoWrite(){
 
 //Check if sticks are active
 boolean checkRudder(){
+  int duration = pulseIn(rudder, HIGH);
+  int value = map(duration, 1360 , 2520 , -rudderSen , rudderSen);
+  vr=value;
   if(vr>(rudderMean+eRudder)||vr<(rudderMean-eRudder))
   return true;
   else return false;
@@ -183,6 +208,19 @@ boolean checkAileron(){
   return true;
   else return false;
 }
+
+//Display velocity values
+void displayVelocity(){
+  Serial.print("Velocity A ");
+  Serial.println(va);
+  Serial.print("Velocity B ");
+  Serial.println(vb);
+  Serial.print("Velocity C ");
+  Serial.println(vc);
+  Serial.print("Velocity D ");
+  Serial.println(vd);
+}
+
 
 //If you want to use Interrupt to calculate PWM
 /*void startSignal(){
