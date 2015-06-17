@@ -63,9 +63,9 @@ int eElevator = 60;
 int eAileron = 60;
 //Define Sensitivities
 
-int rudderSen = 400;
-int elevatorSen = 400;
-int aileronSen = 400;
+int rudderSen = 300
+int elevatorSen = 300;
+int aileronSen = 300;
 
 void setup() {
   
@@ -156,24 +156,29 @@ void rudderController(){
 }
 
 void elevatorController(){
-   int duration = pulseIn(elevator, HIGH);
-  int value = map(duration, 1400 , 2485 , -elevatorSen , elevatorSen);
   #ifdef DEBUG
   Serial.print("Elevator=");
-  Serial.println(value);
+  Serial.println(ve);
   #endif
-  ve=value;
+  
+  vc=vc+ve;
+  vd=vd+ve;
+  va=va-ve;
+  vb=vb-ve;
   
 }
 
 void aileronController(){
-   int duration = pulseIn(aileron, HIGH);
-  int value = map(duration, 1360 , 2520 , -aileronSen , aileronSen);
+   
   #ifdef DEBUG
   Serial.print("Aileron=");
-  Serial.println(value);
+  Serial.println(vl);
   #endif
-  vl=value;
+  
+  vb=vb+vl;
+  vc=vc+vl;
+  va=va-vl;
+  vd=vd-vl;
 }
 
 
@@ -198,12 +203,18 @@ boolean checkRudder(){
 }
 
 boolean checkElevator(){
+  int duration = pulseIn(elevator, HIGH);
+  int value = map(duration, 1400 , 2485 , -elevatorSen , elevatorSen);
+  ve=value;
   if(ve>(elevatorMean+eElevator)||ve<(elevatorMean-eElevator))
   return true;
   else return false;
 }
 
 boolean checkAileron(){
+  int duration = pulseIn(aileron, HIGH);
+  int value = map(duration, 1360 , 2520 , -aileronSen , aileronSen);
+  vl=value;
   if(vl>(aileronMean+eAileron)||vl<(aileronMean-eAileron))
   return true;
   else return false;
