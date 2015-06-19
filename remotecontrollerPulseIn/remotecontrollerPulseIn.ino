@@ -26,7 +26,6 @@ MOTOR MAP
 
 
 #include <Servo.h>
-#include <EnableInterrupt.h>
 
 
 Servo firstESC, secondESC ,thirdESC , fourthESC; //Include as many servo objects as are the number of motors
@@ -41,18 +40,8 @@ Servo firstESC, secondESC ,thirdESC , fourthESC; //Include as many servo objects
 #define DEBUG
 
 //Integers for PWM Calculation
-volatile int prev_timeT;
-volatile int new_timeT;
-volatile int diffT;
-volatile int prev_timeR;
-volatile int new_timeR;
-volatile int diffR;
-volatile int prev_timeE;
-volatile int new_timeE;
-volatile int diffE;
-volatile int prev_timeA;
-volatile int new_timeA;
-volatile int diffA;
+volatile int prev_time;
+volatile int new_time;
 
 //Integers to store motor velocities and properties
 int va=0;
@@ -62,7 +51,6 @@ int vd=0;
 int vr=0;
 int ve=0;
 int vl=0;
-int vt=0;
 
 //Define mean values
 int rudderMean=0;
@@ -70,14 +58,14 @@ int elevatorMean = 0;
 int aileronMean = 0;
 
 //Define error in reading
-int eRudder = 40;
+int eRudder = 50;
 int eElevator = 60;
 int eAileron = 60;
 //Define Sensitivities
 
-int rudderSen = 300;
-int elevatorSen = 300;
-int aileronSen = 300;
+int rudderSen = 200;
+int elevatorSen = 200;
+int aileronSen = 200;
 
 void setup() {
   
@@ -94,12 +82,7 @@ void setup() {
   
   //Automatic Arm
   arm();
-  
-  //Enable Interrupts
-  enableInterrupt(throttle,enThrottleRise,RISING);
-  enableInterrupt(rudder,enRudderRise,RISING);
-  enableInterrupt(elevator,enElevatorRise,RISING);
-  enableInterrupt(aileron,enAileronRise,RISING);
+
 }
 
 void loop(){
@@ -113,11 +96,7 @@ void loop(){
 }
 
 void arm() {
-  
-  #ifdef DEBUG
-  Serial.println("Entering Arm");
-  #endif
-  
+
   //First connect your ESC WITHOUT Arming
   
   //Set an initial delay of 3 seconds
@@ -134,10 +113,6 @@ void arm() {
   servoWrite();
   
   delay(3000); //Delay of 3 seconds before motor runs
-  #ifdef DEBUG
-  Serial.println("Exiting Arm");
-  #endif
-  
 }
 
 void runMotor(){
@@ -157,9 +132,8 @@ void runMotor(){
 
 //Controller methods for RC Functions
 void throttleController(){
-    int duration = new_timeT-prev_timeT;
+    int duration = pulseIn(throttle, HIGH);
     int value = map( duration , 1375, 2525, 700 , 1800);
-    
     #ifdef DEBUG
     Serial.print("Throttle=");
     Serial.println(value);
@@ -220,7 +194,7 @@ void servoWrite(){
 
 //Check if sticks are active
 boolean checkRudder(){
-  int duration = diffR;
+  int duration = pulseIn(rudder, HIGH);
   int value = map(duration, 1360 , 2520 , -rudderSen , rudderSen);
   vr=value;
   if(vr>(rudderMean+eRudder)||vr<(rudderMean-eRudder))
@@ -229,7 +203,7 @@ boolean checkRudder(){
 }
 
 boolean checkElevator(){
-  int duration = diffE;
+  int duration = pulseIn(elevator, HIGH);
   int value = map(duration, 1400 , 2485 , -elevatorSen , elevatorSen);
   ve=value;
   if(ve>(elevatorMean+eElevator)||ve<(elevatorMean-eElevator))
@@ -238,7 +212,7 @@ boolean checkElevator(){
 }
 
 boolean checkAileron(){
-  int duration = diffA;
+  int duration = pulseIn(aileron, HIGH);
   int value = map(duration, 1360 , 2520 , -aileronSen , aileronSen);
   vl=value;
   if(vl>(aileronMean+eAileron)||vl<(aileronMean-eAileron))
@@ -259,69 +233,7 @@ void displayVelocity(){
 }
 
 
-//Interrupt Functions to calculate PWM Signals
-void enThrottleRise(){
-  prev_timeT = micros();
-  enableInterrupt(throttle,enThrottleFall,FALLING);
-}
-
-void enThrottleFall(){
-  new_timeT = micros();
-  diffT = new_timeT - prev_timeT;
-  #ifdef DEBUG
-  Serial.print(" diffT = ");
-  Serial.println(diffT);
-  #endif
-  enableInterrupt(throttle,enThrottleRise,RISING);
-}
-
-void enRudderRise(){
-  prev_timeR = micros();
-  enableInterrupt(rudder,enThrottleFall,FALLING);
-}
-
-void enRudderFall(){
-  new_timeR = micros();
-  diffR = new_timeR - prev_timeR;
-  #ifdef DEBUG
-  Serial.print(" diffR = ");
-  Serial.println(diffR);
-  #endif
-  enableInterrupt(rudder,enRudderRise,RISING);
-}
-
-void enElevatorRise(){
-  prev_timeE = micros();
-  enableInterrupt(elevator,enElevatorFall,FALLING);
-}
-
-void enElevatorFall(){
-  new_timeE = micros();
-  diffE = new_timeE - prev_timeE;
-  #ifdef DEBUG
-  Serial.print(" diffE = ");
-  Serial.println(diffE);
-  #endif
-  enableInterrupt(elevator,enElevatorRise,RISING);
-}
-
-void enAileronRise(){
-  prev_timeA = micros();
-  enableInterrupt(aileron,enAileronFall,FALLING);
-}
-
-void enAileronFall(){
-  new_timeA = micros();
-  diffA = new_timeA - prev_timeA;
-  #ifdef DEBUG
-  Serial.print(" diffA = ");
-  Serial.println(diffA);
-  #endif
-  enableInterrupt(aileron,enAileronRise,RISING);
-}
-
-
-//If you want to use Interrupt to calculate PWM (old method) (now replaced by EnableInterrupt Function)
+//If you want to use Interrupt to calculate PWM
 /*void startSignal(){
   latest_interrupted_pin=PCintPort::arduinoPin;
   prev_time = micros();
