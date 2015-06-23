@@ -51,6 +51,9 @@ int vd=0;
 int vr=0;
 int ve=0;
 int vl=0;
+ 
+//Control variable for before arm validation exit
+boolean armed=false;
 
 //Define mean values
 int rudderMean=0;
@@ -61,8 +64,9 @@ int aileronMean = 0;
 int eRudder = 50;
 int eElevator = 60;
 int eAileron = 60;
-//Define Sensitivities
 
+
+//Define Sensitivities
 int rudderSen = 200;
 int elevatorSen = 200;
 int aileronSen = 200;
@@ -113,6 +117,7 @@ void arm() {
   servoWrite();
   
   delay(3000); //Delay of 3 seconds before motor runs
+  armed=true;
 }
 
 void runMotor(){
@@ -126,6 +131,7 @@ void runMotor(){
   if(checkElevator()) elevatorController();
   //Control for Aileron
   if(checkAileron()) aileronController();
+  //Write the velocities to the motors
   servoWrite();
 }
 
@@ -186,6 +192,7 @@ void aileronController(){
 
 //This function writes different/same values to the servo connected to the motors
 void servoWrite(){
+  validateVelocityMin();
   firstESC.writeMicroseconds(va);
   secondESC.writeMicroseconds(vb);
   thirdESC.writeMicroseconds(vc);
@@ -220,7 +227,7 @@ boolean checkAileron(){
   else return false;
 }
 
-//Display velocity values
+//Display velocity values (DEBUG ONLY)
 void displayVelocity(){
   Serial.print("Velocity A ");
   Serial.println(va);
@@ -232,6 +239,14 @@ void displayVelocity(){
   Serial.println(vd);
 }
 
+void validateVelocityMin(){
+  if(armed){
+    if(va<900) va=900;
+    if(vb<900) vb=900;
+    if(vc<900) vc=900;
+    if(vd<900) vd=900;
+  }
+}
 
 //If you want to use Interrupt to calculate PWM
 /*void startSignal(){
